@@ -1,8 +1,15 @@
 #include <iostream>
+#include <filesystem>
+#include <vector>
+
+using namespace std; 
 
 #define VERSION "1.0.0"
 
-using namespace std; 
+string get_filename_from_path(string path) {
+    int index = path.rfind('/');
+    return path.substr(index+1);
+}
 
 void version() {
     cout << "Version: " << VERSION << endl;
@@ -19,8 +26,38 @@ void help() {
 }
 
 void error(const string msg, int code) {
-    cout << "\033[31mERROR: \033[0m" << msg << endl;
+    cerr << "\033[31mERROR: \033[0m" << msg << endl;
     exit(code);
+}
+
+typedef struct {
+    string path;
+    string filename;
+    bool is_directory;
+} File;
+
+vector<File> listdir(string path) {
+    vector<File> files;
+    try {
+        for (const auto& entry : filesystem::directory_iterator(path)) {
+            File file = {
+                entry.path(),
+                get_filename_from_path(entry.path()),
+                entry.is_directory()
+            };
+            files.push_back(file);
+        }
+    } catch (const filesystem::filesystem_error& e) {
+        error(e.what(), 1);
+    }
+    return files;
+}
+
+void tree(string path, int depth) {
+    vector<File> files = listdir(path);
+    for (auto& file : files) {
+        cout << file.path << " --- " << file.filename << " --- " << file.is_directory << endl;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -31,6 +68,7 @@ int main(int argc, char* argv[]) {
     }
 
     int depth = 0;
+    string file_name;
 
     for (int i=0; i<argc; ++i) {
         if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
@@ -42,8 +80,12 @@ int main(int argc, char* argv[]) {
         } else if ((string)argv[i] == "--help" || (string)argv[i] == "-h") {
             help();
             exit(0);
+        } else {
+            file_name = argv[i];
         }
     }
+
+    tree(file_name, depth);
 
     return 0;
 }
