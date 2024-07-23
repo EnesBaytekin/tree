@@ -32,7 +32,7 @@ void error(const string msg, int code) {
 
 typedef struct {
     string path;
-    string filename;
+    string name;
     bool is_directory;
 } File;
 
@@ -53,10 +53,17 @@ vector<File> listdir(string path) {
     return files;
 }
 
-void tree(string path, int depth) {
+void tree(string path, int depth, int max_depth) {
+    if (depth == max_depth)
+        return;
     vector<File> files = listdir(path);
     for (auto& file : files) {
-        cout << file.path << " --- " << file.filename << " --- " << file.is_directory << endl;
+        for (int i=0; i<depth; ++i)
+            cout << ". ";
+        cout << file.name << endl;
+        if (file.is_directory) {
+            tree(file.path, depth+1, max_depth);
+        }
     }
 }
 
@@ -85,7 +92,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    tree(file_name, depth);
+    tree(file_name, 0, depth);
 
     return 0;
 }
