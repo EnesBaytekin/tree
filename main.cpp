@@ -54,7 +54,7 @@ vector<File> listdir(string path) {
 }
 
 void tree(string path, int depth, int max_depth) {
-    if (depth == max_depth)
+    if (max_depth > 0 && depth == max_depth)
         return;
     vector<File> files = listdir(path);
     for (auto& file : files) {
