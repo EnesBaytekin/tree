@@ -37,10 +37,10 @@ typedef struct {
 } File;
 
 typedef enum {
-  bch,    // |-
-  mid,    // | 
-  end,    // '-
-  emp     //  
+    bch,        // |-
+    mid,        // | 
+    end,        // '-
+    emp         //   
 } state;
 
 vector<File> listdir(string path) {
