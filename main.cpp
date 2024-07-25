@@ -36,6 +36,13 @@ typedef struct {
     bool is_directory;
 } File;
 
+typedef enum {
+  bch,    // |-
+  mid,    // | 
+  end,    // '-
+  emp     //  
+} state;
+
 vector<File> listdir(string path) {
     vector<File> files;
     try {
