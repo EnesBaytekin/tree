@@ -67,6 +67,29 @@ void tree(string path, int depth, int max_depth) {
     }
 }
 
+vector<string> get_args(int argc, char* argv[]) {
+    vector<string> args;
+    for (int i=0; i<argc; ++i) {
+        string arg = argv[i];
+        if (arg.size() >= 2 && \
+            arg[0] == '-' && \
+            arg[1] == '-')
+        {
+            args.push_back(arg);
+        }
+        else if (arg.size() >= 1 && \
+            arg[0] == '-')
+        {
+            for (auto& c: arg.substr(1)) {
+                string a = "-";
+                a += c;
+                args.push_back(a);
+            }
+        }
+    }
+    return args;
+}
+
 int main(int argc, char* argv[]) {
 
     if (argc == 1) {
@@ -76,6 +99,14 @@ int main(int argc, char* argv[]) {
 
     int depth = 0;
     string file_name;
+
+    auto args = get_args(argc, argv);
+
+    for (auto& arg: args) {
+        cout << arg << " ";
+    }
+    cout << endl;
+    return 0;
 
     for (int i=0; i<argc; ++i) {
         if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
