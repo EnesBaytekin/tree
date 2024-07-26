@@ -7,7 +7,10 @@ using namespace std;
 #define VERSION "1.0.0"
 
 string get_filename_from_path(string path) {
+    if (path == "/") return path;
+    if (path.size() > 1 && path.at(path.size()-1) == '/') path = path.substr(0, path.size()-1);
     int index = path.rfind('/');
+    if (index == string::npos) return path;
     return path.substr(index+1);
 }
 
@@ -47,19 +50,19 @@ string state_to_string(state s) {
     string str;
     switch (s) {
         case BCH:
-            str = "|-";
+            str = "|--";
             break;
         case MID:
-            str = "| ";
+            str = "|  ";
             break;
         case END:
-            str = "'-";
+            str = "'--";
             break;
         case EMP:
-            str = "  ";
+            str = "   ";
             break;
         default:
-            str = "  ";
+            str = "   ";
             break;
     }
     return str;
@@ -98,9 +101,10 @@ void tree(File file, int max_depth, vector<state> states) {
             for (state s: states) {
                 new_states.push_back(s);
             }
+            int depth = new_states.size();
             if (new_states.size() > 0) {
-                if      (new_states[child_count-1] == BCH) new_states[child_count-1] = MID;
-                else if (new_states[child_count-1] == END) new_states[child_count-1] = EMP;
+                if      (new_states[depth-1] == BCH) new_states[depth-1] = MID;
+                else if (new_states[depth-1] == END) new_states[depth-1] = EMP;
             }
             if      (i == child_count-1) new_states.push_back(END);
             else if (i <  child_count-1) new_states.push_back(BCH);
