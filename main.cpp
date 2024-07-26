@@ -37,11 +37,33 @@ typedef struct {
 } File;
 
 typedef enum {
-    bch,        // |-
-    mid,        // | 
-    end,        // '-
-    emp         //   
+    BCH,        // |-
+    MID,        // | 
+    END,        // '-
+    EMP         //   
 } state;
+
+string state_to_string(state s) {
+    string str;
+    switch (s) {
+        case BCH:
+            str = "|-";
+            break;
+        case MID:
+            str = "| ";
+            break;
+        case END:
+            str = "'-";
+            break;
+        case EMP:
+            str = "  ";
+            break;
+        default:
+            str = "  ";
+            break;
+    }
+    return str;
+}
 
 vector<File> listdir(string path) {
     vector<File> files;
@@ -60,16 +82,29 @@ vector<File> listdir(string path) {
     return files;
 }
 
-void tree(string path, int depth, int max_depth) {
-    if (max_depth > 0 && depth == max_depth)
-        return;
-    vector<File> files = listdir(path);
-    for (auto& file : files) {
-        for (int i=0; i<depth; ++i)
-            cout << ". ";
-        cout << file.name << endl;
-        if (file.is_directory) {
-            tree(file.path, depth+1, max_depth);
+void tree(File file, int max_depth, vector<state> states) {
+    for (int level=0; level<states.size(); ++level) {
+        cout << state_to_string(states[level]);
+    }
+    string symbol = file.is_directory ? "+" : "-";
+    cout << symbol << " " << file.name << endl;
+    if (max_depth > 0 && states.size() == max_depth) return;
+    if (file.is_directory) {
+        vector<File> children = listdir(file.path);
+        int child_count = children.size();
+        for (int i=0; i<child_count; ++i) {
+            File child = children[i];
+            vector<state> new_states;
+            for (state s: states) {
+                new_states.push_back(s);
+            }
+            if (new_states.size() > 0) {
+                if      (new_states[child_count-1] == BCH) new_states[child_count-1] = MID;
+                else if (new_states[child_count-1] == END) new_states[child_count-1] = EMP;
+            }
+            if      (i == child_count-1) new_states.push_back(END);
+            else if (i <  child_count-1) new_states.push_back(BCH);
+            tree(child, max_depth, new_states);
         }
     }
 }
@@ -82,7 +117,7 @@ int main(int argc, char* argv[]) {
     }
 
     int depth = 0;
-    string file_name;
+    string file_path;
 
     for (int i=0; i<argc; ++i) {
         if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
@@ -95,11 +130,16 @@ int main(int argc, char* argv[]) {
             help();
             exit(0);
         } else {
-            file_name = argv[i];
+            file_path = argv[i];
         }
     }
 
-    tree(file_name, 0, depth);
-
+    File file = {
+        file_path,
+        get_filename_from_path(file_path),
+        filesystem::is_directory(file_path)
+    };
+    vector<state> states;
+    tree(file, depth, states);
     return 0;
 }
