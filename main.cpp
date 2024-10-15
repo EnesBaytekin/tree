@@ -69,7 +69,7 @@ string state_to_string(state s) {
     return str;
 }
 
-vector<File> listdir(string path) {
+vector<File> listdir(string path, bool show_hidden_files) {
     vector<File> files;
     try {
         for (const auto& entry : filesystem::directory_iterator(path)) {
@@ -78,6 +78,9 @@ vector<File> listdir(string path) {
                 get_filename_from_path(entry.path()),
                 entry.is_directory()
             };
+            if (!show_hidden_files && file.name.substr(0, 1) == ".") {
+                continue;
+            }
             files.push_back(file);
         }
     } catch (const filesystem::filesystem_error& e) {
@@ -87,9 +90,6 @@ vector<File> listdir(string path) {
 }
 
 void tree(File file, int max_depth, vector<state> states, bool show_hidden_files) {
-    if (!show_hidden_files && file.name.size() > 1 && file.name.substr(0, 1) == ".") {
-        return;
-    }
     for (int level=0; level<states.size(); ++level) {
         cout << state_to_string(states[level]);
     }
@@ -97,7 +97,7 @@ void tree(File file, int max_depth, vector<state> states, bool show_hidden_files
     cout << symbol << " " << file.name << endl;
     if (max_depth > 0 && states.size() == max_depth) return;
     if (file.is_directory) {
-        vector<File> children = listdir(file.path);
+        vector<File> children = listdir(file.path, show_hidden_files);
         int child_count = children.size();
         for (int i=0; i<child_count; ++i) {
             File child = children[i];
