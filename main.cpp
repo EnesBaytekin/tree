@@ -4,7 +4,7 @@
 
 using namespace std; 
 
-#define VERSION "1.0.0"
+#define VERSION "1.0.1"
 
 string get_filename_from_path(string path) {
     if (path == "/") return path;
