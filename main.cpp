@@ -25,6 +25,7 @@ void help() {
     cout << "    -h, --help               Show this help menu." << endl;
     cout << "    -v, --version            Show the version." << endl;
     cout << "    -d, --depth <number>     Print tree with the given depth." << endl;
+    cout << "    -a                       Show hidden files also." << endl;
     cout << endl;
 }
 
@@ -85,7 +86,10 @@ vector<File> listdir(string path) {
     return files;
 }
 
-void tree(File file, int max_depth, vector<state> states) {
+void tree(File file, int max_depth, vector<state> states, bool show_hidden_files) {
+    if (!show_hidden_files && file.name.size() > 1 && file.name.substr(0, 1) == ".") {
+        return;
+    }
     for (int level=0; level<states.size(); ++level) {
         cout << state_to_string(states[level]);
     }
@@ -108,7 +112,7 @@ void tree(File file, int max_depth, vector<state> states) {
             }
             if      (i == child_count-1) new_states.push_back(END);
             else if (i <  child_count-1) new_states.push_back(BCH);
-            tree(child, max_depth, new_states);
+            tree(child, max_depth, new_states, show_hidden_files);
         }
     }
 }
@@ -122,11 +126,14 @@ int main(int argc, char* argv[]) {
 
     int depth = 0;
     string file_path;
+    bool show_hidden_files = false;
 
     for (int i=0; i<argc; ++i) {
         if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
             if (argc == i+1) error("A number should come after '-d' tag.\nType 'tree --help' to see the usage.", 1);
             depth = atoi(argv[++i]);
+        } else if ((string)argv[i] == "-a") {
+            show_hidden_files = true;
         } else if ((string)argv[i] == "--version" || (string)argv[i] == "-v") {
             version();
             exit(0);
@@ -144,6 +151,6 @@ int main(int argc, char* argv[]) {
         filesystem::is_directory(file_path)
     };
     vector<state> states;
-    tree(file, depth, states);
+    tree(file, depth, states, show_hidden_files);
     return 0;
 }
