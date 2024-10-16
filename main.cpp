@@ -93,8 +93,11 @@ void tree(File file, int max_depth, vector<State> states, bool show_hidden_files
     for (int level=0; level<states.size(); ++level) {
         cout << state_to_string(states[level]);
     }
-    string symbol = file.is_directory ? "+" : "-";
-    cout << symbol << " " << file.name << endl;
+    if (file.is_directory) {
+        cout << "+ \033[1;33m" << file.name << "\033[0m" << endl;
+    } else {
+        cout << "- " << file.name << endl;
+    }
     if (max_depth > 0 && states.size() == max_depth) return;
     if (file.is_directory) {
         vector<File> children = listdir(file.path, show_hidden_files);
