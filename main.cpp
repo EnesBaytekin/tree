@@ -225,7 +225,7 @@ int main(int argc, char* argv[]) {
             if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
                 if (argc == i+1) error("A number should come after '-d' tag.\nType 'tree --help' to see the usage.", 1);
                 depth = atoi(argv[++i]);
-            } else if ((string)argv[i] == "-a") {
+            } else if ((string)argv[i] == "--add" || (string)argv[i] == "-a") {
                 show_hidden_files = true;            
             } else if ((string)argv[i] == "--version" || (string)argv[i] == "-v") {
                 version();
