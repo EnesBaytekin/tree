@@ -7,7 +7,7 @@
 
 using namespace std; 
 
-#define VERSION "1.0.1"
+#define VERSION "v1.0.1"
 
 string get_filename_from_path(string path) {
     if (path == "/") return path;
@@ -22,13 +22,27 @@ void version() {
 }
 
 void help() {
-    cout << "Usage: tree [OPTIONS] [PATH]" << endl;
+    cout << "USAGE:" << endl;
+    cout << "  tree [options] <path>" << endl;
     cout << endl;
-    cout << "Options:" << endl;
-    cout << "    -h, --help               Show this help menu." << endl;
-    cout << "    -v, --version            Show the version." << endl;
-    cout << "    -d, --depth <number>     Print tree with the given depth." << endl;
-    cout << "    -a                       Show hidden files also." << endl;
+    cout << "    Recursively print the files in the specified path." << endl;
+    cout << endl;
+    cout << "  Options:" << endl;
+    cout << "    -h, --help              Show this help menu." << endl;
+    cout << "    -v, --version           Show the version." << endl;
+    cout << "    -d, --depth <number>    Display the tree up to the given depth." << endl;
+    cout << "    -a, --all               Also display hidden files." << endl;
+    cout << "OR" << endl;
+    cout << "  tree exclude [options] <name>..." << endl;
+    cout << endl;
+    cout << "    Add the names provided to the excludes list. (~/.config/tree/excludes)" << endl;
+    cout << "    Files with names that are inside the excludes list will never be" << endl;
+    cout << "    printed, even if the '-a' option is given." << endl;
+    cout << endl;
+    cout << "  Options:" << endl;
+    cout << "    -d, --delete            Delete the given names from the excludes list" << endl;
+    cout << "                            instead of adding them." << endl;
+    cout << "    -l, --list              List the items in the excludes list." << endl;
     cout << endl;
 }
 
@@ -92,7 +106,10 @@ vector<File> listdir(string path, bool get_hidden_files) {
     return files;
 }
 
-void tree(File file, int max_depth, vector<State> states, bool show_hidden_files) {
+void tree(File file, int max_depth, vector<State> states, bool show_hidden_files, const vector<string>& exclude_list) {
+    if (find(exclude_list.begin(), exclude_list.end(), file.name) != exclude_list.end()) {
+        return;
+    }
     for (int level=0; level<states.size(); ++level) {
         cout << state_to_string(states[level]);
     }
@@ -118,7 +135,7 @@ void tree(File file, int max_depth, vector<State> states, bool show_hidden_files
             }
             if      (i == child_count-1) new_states.push_back(State::END);
             else if (i <  child_count-1) new_states.push_back(State::BCH);
-            tree(child, max_depth, new_states, show_hidden_files);
+            tree(child, max_depth, new_states, show_hidden_files, exclude_list);
         }
     }
 }
@@ -221,13 +238,15 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        const vector<string>& exclude_list = load_exclude_list();
+
         File file = {
             file_path,
             get_filename_from_path(file_path),
             filesystem::is_directory(file_path)
         };
         vector<State> states;
-        tree(file, depth, states, show_hidden_files);
+        tree(file, depth, states, show_hidden_files, exclude_list);
     }
     return 0;
 }
