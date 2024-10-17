@@ -1,0 +1,28 @@
+_tree_completions() {
+    local cur prev opts path
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    path=$(pwd)
+
+    if [[ "$prev" != "exclude" ]]; then
+    	if [[ "$prev" == "--delete" || "$prev" == "-d" ]]; then
+            COMPREPLY=( $(compgen -W "$([[ -f ~/.config/tree/excludes ]] && cat ~/.config/tree/excludes)" -- "$cur") )
+            return 0
+	fi
+    	if [[ "$cur" == -* ]]; then
+            COMPREPLY=( $(compgen -W "--help --version --depth --all" -- "$cur") )
+            return 0
+        fi
+        COMPREPLY=( $(compgen -W "exclude $(ls -a "$path")" -- "$cur") )
+    else
+        COMPREPLY=( $(compgen -W "--delete --list" -- "$cur") )
+    fi
+}
+
+complete -F _tree_completions tree
+
+
+
+
