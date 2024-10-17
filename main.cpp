@@ -69,7 +69,7 @@ string state_to_string(State s) {
     return str;
 }
 
-vector<File> listdir(string path, bool show_hidden_files) {
+vector<File> listdir(string path, bool get_hidden_files) {
     vector<File> files;
     try {
         for (const auto& entry : filesystem::directory_iterator(path)) {
@@ -78,7 +78,7 @@ vector<File> listdir(string path, bool show_hidden_files) {
                 get_filename_from_path(entry.path()),
                 entry.is_directory()
             };
-            if (!show_hidden_files && file.name.substr(0, 1) == ".") {
+            if (!get_hidden_files && file.name.substr(0, 1) == ".") {
                 continue;
             }
             files.push_back(file);
