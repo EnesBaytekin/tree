@@ -1,6 +1,9 @@
 #include <iostream>
 #include <filesystem>
 #include <vector>
+#include <fstream>
+#include <sys/stat.h>
+#include <algorithm>
 
 using namespace std; 
 
@@ -120,40 +123,111 @@ void tree(File file, int max_depth, vector<State> states, bool show_hidden_files
     }
 }
 
+void save_exclude_list(vector<string> exclude_list) {
+    string home_path = getenv("HOME");
+    string excludes_path = home_path+"/.config/tree";
+    if (stat(excludes_path.c_str(), nullptr) != -1) {
+        if (mkdir(excludes_path.c_str(), 0755) == -1) {
+            error("The path '"+excludes_path+"' could not be created.", 1);
+        }
+    }
+    ofstream file(excludes_path+"/excludes");
+    if (!file) {
+        error("Could not open the file '"+excludes_path+"/excludes'", 1);
+    }
+    sort(exclude_list.begin(), exclude_list.end());
+    for (const string& path : exclude_list) {
+        file << path << endl;
+    }
+    file.close();
+}
+
+vector<string> load_exclude_list() {
+    vector<string> exclude_list;
+    string home_path = getenv("HOME");
+    string excludes_path = home_path+"/.config/tree/excludes";
+    ifstream file(excludes_path);
+    if (!file) {
+        error("Could not open the file '"+excludes_path+"/excludes'", 1);
+    }
+    string line;
+    while (getline(file, line)) {
+        exclude_list.push_back(line);
+    }
+    file.close();
+    return exclude_list;
+}
+
 int main(int argc, char* argv[]) {
 
     if (argc == 1) {
         help();
         exit(0);
-    }
+    } else if ((string)argv[1] == "exclude") {
+        vector<string> exclude_list = load_exclude_list();
 
-    int depth = 0;
-    string file_path;
-    bool show_hidden_files = false;
-
-    for (int i=0; i<argc; ++i) {
-        if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
-            if (argc == i+1) error("A number should come after '-d' tag.\nType 'tree --help' to see the usage.", 1);
-            depth = atoi(argv[++i]);
-        } else if ((string)argv[i] == "-a") {
-            show_hidden_files = true;
-        } else if ((string)argv[i] == "--version" || (string)argv[i] == "-v") {
-            version();
-            exit(0);
-        } else if ((string)argv[i] == "--help" || (string)argv[i] == "-h") {
-            help();
-            exit(0);
-        } else {
-            file_path = argv[i];
+        bool will_delete = false;
+        vector<string> file_names;
+        for (int i=2; i<argc; ++i) {
+            if ((string)argv[i] == "--delete" || (string)argv[i] == "-d") {
+                will_delete = true;
+            } else if ((string)argv[i] == "--list" || (string)argv[i] == "-l") {
+                for (const string& name : exclude_list) {
+                    cout << name << endl;
+                }
+                exit(0);
+            } else {
+                file_names.push_back((string)argv[i]);
+            }
         }
-    }
+        if (file_names.size() == 0) {
+            error("Give path names after 'exclude'. Type 'tree --help' to see the usage.", 1);
+        }
 
-    File file = {
-        file_path,
-        get_filename_from_path(file_path),
-        filesystem::is_directory(file_path)
-    };
-    vector<State> states;
-    tree(file, depth, states, show_hidden_files);
+        if (will_delete) {
+            for (const string& name : file_names) {
+                exclude_list.erase(remove(exclude_list.begin(), exclude_list.end(), name), exclude_list.end());
+            }
+        } else {
+            for (const string& name : file_names) {
+                if (find(exclude_list.begin(), exclude_list.end(), name) == exclude_list.end()) {
+                    exclude_list.push_back(name);
+                }
+            }
+        }
+
+        save_exclude_list(exclude_list);
+
+    } else {
+
+        int depth = 0;
+        string file_path;
+        bool show_hidden_files = false;
+
+        for (int i=0; i<argc; ++i) {
+            if ((string)argv[i] == "--depth" || (string)argv[i] == "-d") {
+                if (argc == i+1) error("A number should come after '-d' tag.\nType 'tree --help' to see the usage.", 1);
+                depth = atoi(argv[++i]);
+            } else if ((string)argv[i] == "-a") {
+                show_hidden_files = true;            
+            } else if ((string)argv[i] == "--version" || (string)argv[i] == "-v") {
+                version();
+                exit(0);
+            } else if ((string)argv[i] == "--help" || (string)argv[i] == "-h") {
+                help();
+                exit(0);
+            } else {
+                file_path = argv[i];
+            }
+        }
+
+        File file = {
+            file_path,
+            get_filename_from_path(file_path),
+            filesystem::is_directory(file_path)
+        };
+        vector<State> states;
+        tree(file, depth, states, show_hidden_files);
+    }
     return 0;
 }
